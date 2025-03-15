@@ -3,7 +3,7 @@ A high-performance library for Computer Vision, leveraging Rust's speed and safe
 
 ## Run
 ```
-cargo run --release --model assets\weights\yolov8n.onnx --source assets\data\input.jpg
+cargo run --release -- --model assets\weights\yolov8n.onnx --source assets\data\input.jpg
 ```
 
 You can add ``` --cuda --device_id <id>``` to use cuda
