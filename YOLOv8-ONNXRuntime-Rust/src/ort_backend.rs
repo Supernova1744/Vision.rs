@@ -65,7 +65,7 @@ impl OrtInputs {
                 .map(|x| if let Some(x) = x { x as i32 } else { -1i32 })
                 .collect();
             shapes.push(shape); */
-            if let ort::value::ValueType::Tensor { ty, dimensions, dimension_symbols } = &i.input_type {
+            if let ort::value::ValueType::Tensor { ty, dimensions, .. } = &i.input_type {
                 dtypes.push(ty.clone());
                 let shape = dimensions.clone();
                 shapes.push(shape);
@@ -207,7 +207,7 @@ impl OrtBackend {
         let mut dtypes = Vec::new();
         let mut names = Vec::new();
         for i in session.inputs.iter() {
-            if let ort::value::ValueType::Tensor { ty, dimensions, dimension_symbols } = &i.input_type {
+            if let ort::value::ValueType::Tensor { ty, dimensions, .. } = &i.input_type {
                 dtypes.push(ty.clone());
                 let shape = dimensions.clone();
                 shapes.push(shape);
@@ -383,7 +383,7 @@ impl OrtBackend {
     pub fn output_shapes(&self) -> Vec<Vec<i64>> {
         let mut shapes = Vec::new();
         for output in &self.session.outputs {
-            if let ValueType::Tensor { ty: _, dimensions, dimension_symbols } = &output.output_type {
+            if let ValueType::Tensor { ty: _, dimensions, .. } = &output.output_type {
                 let shape = dimensions.clone();
                 shapes.push(shape);
             } else {
@@ -396,7 +396,7 @@ impl OrtBackend {
     pub fn output_dtypes(&self) -> Vec<TensorElementType> {
         let mut dtypes = Vec::new();
         for output in &self.session.outputs {
-            if let ValueType::Tensor { ty, dimensions: _, dimension_symbols } = &output.output_type {
+            if let ValueType::Tensor { ty, dimensions: _, .. } = &output.output_type {
                 dtypes.push(ty.clone());
             } else {
                 panic!("not support data format, {} - {}", file!(), line!());
