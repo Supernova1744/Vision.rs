@@ -4,6 +4,7 @@ use std::io::{Read, Write};
 
 pub mod cli;
 pub mod model;
+pub mod utils;
 pub mod ort_backend;
 pub mod yolo_result;
 pub use crate::cli::Args;
