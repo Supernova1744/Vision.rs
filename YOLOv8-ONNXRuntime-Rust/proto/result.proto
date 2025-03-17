@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package yolo_grpc;
+
+// Represents an n-dimensional tensor.
+message Embedding {
+  // Flattened data of the tensor.
+  repeated float data = 1;
+  // Shape of the tensor (optional, if needed for reshaping).
+  repeated int32 shape = 2;
+}
+
+// A bounding box around an object.
+message Bbox {
+  float xmin = 1;
+  float ymin = 2;
+  float width = 3;
+  float height = 4;
+  uint32 id = 5;
+  float confidence = 6;
+}
+
+// A 2D point with a confidence score.
+message Point2 {
+  float x = 1;
+  float y = 2;
+  float confidence = 3;
+}
+
+// A set of keypoints for an image.
+message KeypointSet {
+  repeated Point2 points = 1;
+}
+
+// YOLO result for a single image.
+message YOLOResult {
+  // Optional probabilities (e.g. embedding tensor).
+  optional Embedding probs = 1;
+  // List of bounding boxes; defaults to empty if not provided.
+  repeated Bbox bboxes = 2;
+  // List of keypoint sets; defaults to empty.
+  repeated KeypointSet keypoints = 3;
+  // List of masks as raw bytes; defaults to empty.
+  repeated bytes masks = 4;
+}
+
+// Request message containing a list of images.
+// Each image is encoded (e.g., JPEG, PNG) as raw bytes.
+message ProcessImagesRequest {
+  repeated bytes images = 1;
+}
+
+// Response message containing YOLO detection results for each image.
+message ProcessImagesResponse {
+  repeated YOLOResult results = 1;
+}
+
+// Service definition.
+service YOLOService {
+  // Processes a list of images and returns a list of detection results.
+  rpc ProcessImages(ProcessImagesRequest) returns (ProcessImagesResponse);
+}
