@@ -22,3 +22,12 @@ half = { version = "2.3.1" }
 dirs = { version = "5.0.1" }
 ureq = { version = "2.9.1" }
 ab_glyph = "0.2.29"
+
+# gRPC dependencies
+
+tonic = "0.9"
+prost = "0.11"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+[build-dependencies]
+tonic-build = "0.9"
