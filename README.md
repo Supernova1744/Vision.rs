@@ -42,6 +42,11 @@ python -m grpc_tools.protoc -I./proto --python_out=. --grpc_python_out=. ./proto
 
 This command creates the necessary Python files based on your gRPC `.proto` definitions.
 
+
+
+**Note:** To utilize CUDA acceleration in this repository, ensure that your system has **CUDA 12.x** and **cuDNN 9.x** installed. Compatibility between CUDA and cuDNN versions is crucial for optimal performance. For detailed compatibility information, refer to [NVIDIA's support matrix](https://docs.nvidia.com/deeplearning/cudnn/backend/latest/reference/support-matrix.html).
+
+
 ## Contributing
 
 Contributions are welcome! If you have any suggestions or improvements, please open an issue or submit a pull request.
