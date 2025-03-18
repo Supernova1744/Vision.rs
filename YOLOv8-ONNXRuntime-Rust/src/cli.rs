@@ -9,10 +9,6 @@ pub struct Args {
     #[arg(long, required = true)]
     pub model: String,
 
-    /// input path
-    #[arg(long, required = false)]
-    pub source: String,
-
     /// device id
     #[arg(long, default_value_t = 0)]
     pub device_id: i32,
