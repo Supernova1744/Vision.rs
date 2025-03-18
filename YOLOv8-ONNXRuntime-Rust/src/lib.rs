@@ -7,10 +7,25 @@ pub mod model;
 pub mod utils;
 pub mod ort_backend;
 pub mod yolo_result;
+pub mod grpc;
+pub mod converter;
+pub mod yolo_service;
+
 pub use crate::cli::Args;
 pub use crate::model::YOLOv8;
 pub use crate::ort_backend::{Batch, OrtBackend, OrtConfig, OrtEP, YOLOTask};
 pub use crate::yolo_result::{Bbox, Embedding, Point2, YOLOResult};
+pub use crate::grpc::{
+    ProcessImagesRequest, ProcessImagesResponse,
+    YoloResult as ProtoYoloResult,
+    Embedding as ProtoEmbedding,
+    Bbox as ProtoBbox,
+    KeypointSet as ProtoKeypointSet,
+    Point2 as ProtoPoint2,
+    yolo_service_server
+};
+pub use crate::yolo_service::MyYoloService;
+pub use crate::converter::convert_yolo_result;
 
 pub fn non_max_suppression(
     xs: &mut Vec<(Bbox, Option<Vec<Point2>>, Option<Vec<f32>>)>,
