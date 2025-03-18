@@ -1,46 +1,33 @@
 use clap::Parser;
-use std::path::Path;
 
-use yolov8_rs::{Args, YOLOv8};
-use yolov8_rs::utils::{get_all_files, is_valid_image};
+use std::error::Error;
+use tonic::transport::Server;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Parse all args
+use yolov8_rs::{
+    Args, YOLOv8,
+    yolo_service_server::YoloServiceServer,
+    MyYoloService
+};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
+    // Parse command line arguments and initialize the YOLOv8 model once.
     let args = Args::parse();
-    // Define Path
-    let path = Path::new(&args.source);
-    // Check if the path is single file or dir
-    let all_files = if path.exists() && path.is_file() {
-        vec![args.source.clone()]
-    } else {
-        get_all_files(&path)?
-    };
 
-    // 1. build yolov8 model
-    let mut model = YOLOv8::new(args)?;
-    model.summary(); // model info
+    let model = YOLOv8::new(args)
+        .map_err(|e| format!("Error creating model: {:?}", e))?;
+    model.summary();
 
-    for file_path in all_files.iter(){
-        if is_valid_image(file_path) == false {
-            println!("Invalid Image Path: {:?}", file_path);
-            continue;
-        }
-        println!("Working on Image: {:?}", file_path);
-        // 2. load image
-        let x = image::ImageReader::open(&file_path)?
-            .with_guessed_format()?
-            .decode()?;
+    // Create the service with the pre-initialized model.
+    let yolo_service = MyYoloService::new(model);
+    let addr = "[::1]:50051".parse()?;
+    println!("YOLOService server listening on {}", addr);
 
-        // 3. model support dynamic batch inference, so input should be a Vec
-        let xs = vec![x];
-
-        // You can test `--batch 2` with this
-        // let xs = vec![x.clone(), x];
-
-        // 4. run
-        let ys = model.run(&xs)?;
-        println!("{:?}", ys);
-    }
+    // Start the gRPC server.
+    Server::builder()
+        .add_service(YoloServiceServer::new(yolo_service))
+        .serve(addr)
+        .await?;
 
     Ok(())
 }
