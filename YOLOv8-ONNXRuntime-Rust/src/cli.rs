@@ -10,7 +10,7 @@ pub struct Args {
     pub model: String,
 
     /// input path
-    #[arg(long, required = true)]
+    #[arg(long, required = false)]
     pub source: String,
 
     /// device id
