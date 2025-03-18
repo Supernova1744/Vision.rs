@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package yolo_grpc;
+package grpc;
 
 // Represents an n-dimensional tensor.
 message Embedding {
