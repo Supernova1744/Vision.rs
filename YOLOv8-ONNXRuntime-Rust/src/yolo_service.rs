@@ -1,7 +1,7 @@
 use tokio::sync::Mutex;
 
-use std::{fmt, time::Instant};
-use image::{DynamicImage, GenericImageView};
+use std::fmt;
+use image::DynamicImage;
 use tonic::{Request, Response, Status, async_trait};
 
 use crate::{
@@ -47,11 +47,9 @@ impl YoloService for MyYoloService {
         for image_data in req.images {
             let dynamic_image: DynamicImage = image::load_from_memory(&image_data)
                 .map_err(|e| Status::invalid_argument(format!("Failed to decode image: {}", e)))?;
-            println!("Received image with dimensions: {:?}", dynamic_image.dimensions());
 
             let xs = vec![dynamic_image];
 
-            let start = Instant::now();
             // Lock the model for exclusive mutable access.
             let ys = {
                 let mut model = self.model.lock().await;
@@ -59,13 +57,8 @@ impl YoloService for MyYoloService {
                     Status::internal(format!("Model run failed: {}", e))
                 })?
             };
-            let duration = start.elapsed();
-            println!("Time elapsed in model.run is: {:?}", duration);
 
-            let start = Instant::now();
             let result = convert_yolo_result(&ys[0]);
-            let duration = start.elapsed();
-            println!("Time elapsed in convert_yolo_result is: {:?}", duration);
 
             results.push(result);
         }
