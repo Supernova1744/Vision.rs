@@ -23,13 +23,13 @@ It leverages Rust’s speed and safety for efficient image processing and offers
 To run Vision.rs using the provided YOLOv8n ONNX model and an input image, execute the following command:
 
 ```bash
-cargo run --release -- --model assets/weights/yolov8n.onnx
+$ cargo run --release -- --model assets/weights/yolov8n.onnx
 ```
 
 To enable CUDA support, append the `--cuda` flag along with the device ID:
 
 ```bash
-cargo run --release -- --model assets/weights/yolov8n.onnx --cuda --device_id <id>
+$ cargo run --release -- --model assets/weights/yolov8n.onnx --cuda --device_id <id>
 ```
 
 ## Generating Python gRPC Scripts
@@ -37,7 +37,7 @@ cargo run --release -- --model assets/weights/yolov8n.onnx --cuda --device_id <i
 To generate Python encoding/decoding scripts for gRPC communication, run:
 
 ```bash
-python -m grpc_tools.protoc -I./proto --python_out=. --grpc_python_out=. ./proto/result.proto
+$ python -m grpc_tools.protoc -I./proto --python_out=. --grpc_python_out=. ./proto/result.proto
 ```
 
 This command creates the necessary Python files based on your gRPC `.proto` definitions.
@@ -46,6 +46,19 @@ This command creates the necessary Python files based on your gRPC `.proto` defi
 
 **Note:** To utilize CUDA acceleration in this repository, ensure that your system has **CUDA 12.x** and **cuDNN 9.x** installed. Compatibility between CUDA and cuDNN versions is crucial for optimal performance. For detailed compatibility information, refer to [NVIDIA's support matrix](https://docs.nvidia.com/deeplearning/cudnn/backend/latest/reference/support-matrix.html).
 
+## Testing
+
+for API testing you can use the python scripts under `tests` dir
+
+You need to run the following command to generate
+
+```
+$ pip install grpcio-tools opencv-python
+
+$ python -m grpc_tools.protoc -I . --proto_path=proto\result.proto --python_out=tests --grpc_python_out=tests proto\result.proto
+
+$ python tests\video_client.py VIDEO_PATH
+```
 
 ## Contributing
 
