@@ -58,6 +58,8 @@ $ pip install grpcio-tools opencv-python
 $ python -m grpc_tools.protoc -I . --proto_path=proto\result.proto --python_out=tests --grpc_python_out=tests proto\result.proto
 
 $ python tests\video_client.py VIDEO_PATH
+(or)
+$ python tests\image_client.py IMAGE_PATH
 ```
 
 ## Contributing
