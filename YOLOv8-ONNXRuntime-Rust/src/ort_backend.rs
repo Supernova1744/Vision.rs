@@ -70,7 +70,7 @@ impl OrtInputs {
                 let shape = dimensions.clone();
                 shapes.push(shape);
             } else {
-                panic!("不支持的数据格式, {} - {}", file!(), line!());
+                panic!("Unsupported data format, {} - {}", file!(), line!());
             }
             //dtypes.push(i.input_type);
             names.push(i.name.clone());
@@ -212,7 +212,7 @@ impl OrtBackend {
                 let shape = dimensions.clone();
                 shapes.push(shape);
             } else {
-                panic!("不支持的数据格式, {} - {}", file!(), line!());
+                panic!("Unsupported data format, {} - {}", file!(), line!());
             }
             names.push(i.name.clone());
         }
