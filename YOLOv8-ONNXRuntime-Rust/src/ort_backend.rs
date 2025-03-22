@@ -165,7 +165,7 @@ impl OrtBackend {
 
         // build session again with the new provider
         let session = SessionBuilder::new()?
-            // .with_optimization_level(ort::GraphOptimizationLevel::Level3)?
+            // .with_optimization_level(ort::session::builder::GraphOptimizationLevel::Level3)?
             .with_execution_providers([provider])?
             .commit_from_file(args.f)?;
 
