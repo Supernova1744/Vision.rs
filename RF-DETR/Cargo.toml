@@ -1,0 +1,39 @@
+[package]
+name = "RF-DETR"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.2.4", features = ["derive"] }
+image = { version = "0.25.2"}
+imageproc = { version = "0.25.0"}
+ndarray = { version = "0.16.1" }
+ort = { version = "2.0.0-rc.9", features = ["cuda", "tensorrt", "load-dynamic", "copy-dylibs", "half"]}
+rusttype = { version = "0.9.3" }
+anyhow = { version = "1.0.75" }
+regex = { version = "1.5.4" }
+rand = { version = "0.8.5" }
+chrono = { version = "0.4.30" }
+half = { version = "2.3.1" }
+dirs = { version = "5.0.1" }
+ureq = { version = "2.9.1" }
+ab_glyph = "0.2.29"
+zerocopy = "0.8.1"
+
+# gRPC dependencies
+
+tonic = "0.9"
+prost = "0.11"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+
+rayon = "1.7"
+fast_image_resize = "5.1.2"
+
+[build-dependencies]
+tonic-build = "0.9"
+
+[profile.release]
+debug = false
+debug-assertions = false
+overflow-checks = false
