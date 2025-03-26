@@ -1,5 +1,5 @@
 use anyhow::Result;
-use image::Rgba;
+use image::{DynamicImage, Rgba};
 use ndarray::Array1;
 
 use imageproc::{drawing::draw_hollow_rect_mut, rect::Rect};
@@ -10,13 +10,14 @@ const HEIGHT: u32 = 560;
 
 
 pub fn draw_boxes(
-    img_path: &str,
+    // img_path: &str,
+    original_image: DynamicImage,
     boxes: Vec<Array1<f32>>,
     offsets: &[(u32, u32)],
     output_path: &str
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Load original image
-    let mut img = image::open(img_path)?.to_rgba8();
+    let mut img = original_image.to_rgba8();
     let (orig_w, orig_h) = (img.width() as f32, img.height() as f32);
     
     // Get preprocessing parameters
