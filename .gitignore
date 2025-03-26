@@ -30,3 +30,5 @@ image2/
 image/
 **/*.pth
 YOLO*/
+candle/
+RF-DETR/**/*.onnx
