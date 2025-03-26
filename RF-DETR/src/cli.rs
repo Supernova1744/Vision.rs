@@ -12,6 +12,10 @@ pub struct Args {
     #[arg(long, required = true)]
     pub source: String,
 
+    /// using CUDA EP
+    #[arg(long)]
+    pub cuda: bool,
+
     #[arg(long, default_value_t = String::from(r"output\"))]
     pub output: String,
 
