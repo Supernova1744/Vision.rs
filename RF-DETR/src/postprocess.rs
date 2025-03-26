@@ -1,10 +1,6 @@
 use anyhow::Result;
 use std::{collections::HashMap, error::Error};
-use image::{DynamicImage, Rgba, GenericImageView};
-use ndarray::{Array, Array1, Array3, Axis, CowArray, OwnedRepr};
-use ort::session::builder::SessionBuilder;
-use imageproc::{drawing::draw_hollow_rect_mut, rect::Rect};
-use ndarray::{ArrayBase, IxDynImpl};
+use ndarray::{Array, Array1, Array3, Axis};
 use ordered_float::OrderedFloat;
 
 /// Applies softmax to a 1D array (slice) and returns a new Array1<f32>.
