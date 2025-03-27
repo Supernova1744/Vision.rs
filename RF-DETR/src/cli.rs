@@ -16,6 +16,12 @@ pub struct Args {
     #[arg(long)]
     pub cuda: bool,
 
+    #[arg(long)]
+    pub profile: bool,
+
+    #[arg(long)]
+    pub deep_profile: bool,
+
     #[arg(long, default_value_t = String::from(r"output\"))]
     pub output: String,
 
