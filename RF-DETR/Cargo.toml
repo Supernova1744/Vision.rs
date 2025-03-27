@@ -21,6 +21,7 @@ ab_glyph = "0.2.29"
 zerocopy = "0.8.1"
 ordered-float = "2.8"
 text-image = "0.1.2"
+fast_image_resize = {version = "5.1.2", features = ["image"]}
 
 # gRPC dependencies
 
@@ -28,9 +29,7 @@ tonic = "0.9"
 prost = "0.11"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 
-
-rayon = "1.7"
-fast_image_resize = "5.1.2"
+rayon = "1.8.0"
 
 [build-dependencies]
 tonic-build = "0.9"
