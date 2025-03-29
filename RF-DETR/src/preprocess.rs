@@ -4,6 +4,7 @@ use image::DynamicImage;
 use fast_image_resize::images::Image;
 use fast_image_resize::{IntoImageView, Resizer};
 
+#[derive(Debug)]
 pub struct PreprocessConfig {
     pub mean: [f32; 3],
     pub std: [f32; 3],
@@ -12,6 +13,7 @@ pub struct PreprocessConfig {
     pub channels: usize,
 }
 
+#[derive(Debug)]
 pub  struct Processor {
     pub config: PreprocessConfig,
 }
@@ -27,6 +29,7 @@ impl PreprocessConfig {
         }
     }
 }
+
 
 impl Processor {
     /// Create a new instance of the Processor struct
