@@ -1,16 +1,13 @@
 use clap::Parser;
 
 
-#[derive(Parser, Clone)]
+#[derive(Parser, Clone, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Args {
     /// ONNX model path
     #[arg(long, required = true)]
     pub model: String,
 
-    /// image path
-    #[arg(long, required = true)]
-    pub source: String,
 
     /// using CUDA EP
     #[arg(long)]
