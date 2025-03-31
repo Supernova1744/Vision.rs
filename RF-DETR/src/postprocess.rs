@@ -1,4 +1,5 @@
 use anyhow::Result;
+use image::DynamicImage;
 use std::{collections::HashMap, error::Error};
 use ndarray::{Array, Array1, Array3, Axis};
 use ordered_float::OrderedFloat;
@@ -131,4 +132,37 @@ pub fn non_maximum_suppression(
     let filtered_boxes: Vec<Array1<f32>> = keep_indices.iter().map(|&i| boxes[i].clone()).collect();
 
     (filtered_confs, filtered_ids, filtered_boxes)
+}
+
+pub fn denormalize(
+    orig_w: f32,
+    orig_h: f32,
+    cur_w: f32,
+    cur_h: f32,
+    x_off: u32,
+    y_off: u32,
+    boxes: Vec<Array1<f32>>,
+) -> Vec<[i32; 4]>{
+    let mut output = Vec::new();
+    let scale = (cur_w / orig_w).min(cur_h / orig_h);
+
+    for box_ in boxes {
+        // Denormalize to padded image coordinates
+        let x_pad = box_[0] * cur_w;
+        let y_pad = box_[1] * cur_h;
+        let w_pad = box_[2] * cur_w;
+        let h_pad = box_[3] * cur_h;
+
+        // Adjust for padding offset
+        let x_resized = x_pad - x_off as f32;
+        let y_resized = y_pad - y_off as f32;
+
+        // Convert to original image coordinates
+        let x_center = (x_resized / scale).round() as i32;
+        let y_center = (y_resized / scale).round() as i32;
+        let width = (w_pad / scale).round() as i32;
+        let height = (h_pad / scale).round() as i32;
+        output.push([x_center, y_center, width, height]);
+    }
+    output
 }
