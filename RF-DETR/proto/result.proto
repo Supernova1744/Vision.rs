@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package grpc;
+
+service ImageProcessor {
+  rpc ProcessImage(ImageRequest) returns (DetectionResponse);
+}
+
+message ImageRequest {
+  bytes image_data = 1; // PNG-encoded image bytes [[1]][[2]]
+}
+
+message DetectionResponse {
+  repeated float filtered_conf = 1;
+  repeated int32 filtered_classes = 2;
+  repeated int32 filtered_boxes = 3; // Flattened array of bounding boxes (4 values per box)
+}
