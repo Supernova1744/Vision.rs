@@ -1,3 +1,4 @@
+use image::GenericImageView;
 use ndarray::{Array, ArrayBase, CowArray, IxDynImpl, OwnedRepr};
 use tokio::sync::Mutex;
 
@@ -5,7 +6,7 @@ use tonic::{Response, Status};
 use crate::cli::Args;
 use crate::grpc;
 use crate::preprocess::Processor;
-use crate::postprocess::{softmax_and_filter, non_maximum_suppression};
+use crate::postprocess::{softmax_and_filter, non_maximum_suppression, denormalize};
 
 
 #[derive(Debug)]
@@ -41,7 +42,9 @@ impl grpc::image_processor_server::ImageProcessor for MyImageProcessor {
         // 1. Decode image bytes
         let image_data = &request.into_inner().image_data;
         let image = image::load_from_memory(image_data)
-            .map_err(|e| Status::invalid_argument(format!("Invalid image: {}", e)))?;
+        .map_err(|e| Status::invalid_argument(format!("Invalid image: {}", e)))?;
+        let (orig_w, orig_h) = image.dimensions();
+        
 
         // 2. Run your image processing logic (replace with your actual function)
         let (xs, offset) = self.processor.lock().await.preprocess(&vec![image.clone()], self.args.deep_profile)
@@ -63,8 +66,11 @@ impl grpc::image_processor_server::ImageProcessor for MyImageProcessor {
 
         let (filtered_classes, filtered_conf, filtered_boxes) = softmax_and_filter(classes, boxes, 0.5)
             .map_err(|e| Status::internal(format!("Softmax and filter error: {}", e)))?;
-        let (filtered_conf, filtered_classes, filtered_boxes) = non_maximum_suppression(filtered_conf, filtered_classes, filtered_boxes, 0.5);
-
+        let (filtered_conf, filtered_classes, filtered_boxes) = non_maximum_suppression(filtered_conf, filtered_classes, filtered_boxes, 0.25);
+        
+        let filtered_boxes = denormalize(
+            orig_w as f32, orig_h as f32, 560.0, 560.0,
+            offset[0].0, offset[0].1, filtered_boxes);
         // 3. Prepare response
         Ok(Response::new(crate::grpc::DetectionResponse {
             filtered_conf,
