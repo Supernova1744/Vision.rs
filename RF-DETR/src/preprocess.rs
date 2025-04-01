@@ -3,37 +3,16 @@ use rayon::prelude::*;
 use image::DynamicImage;
 use fast_image_resize::images::Image;
 use fast_image_resize::{IntoImageView, Resizer};
+use crate::cli::Args;
 
 #[derive(Debug)]
-pub struct PreprocessConfig {
-    pub mean: [f32; 3],
-    pub std: [f32; 3],
-    pub height: usize,
-    pub width: usize,
-    pub channels: usize,
+pub  struct PreProcessor {
+    pub config: Args,
 }
 
-#[derive(Debug)]
-pub  struct Processor {
-    pub config: PreprocessConfig,
-}
-
-impl PreprocessConfig {
-    pub fn default() -> Self {
-        Self {
-            mean: [0.485, 0.456, 0.406],
-            std: [0.229, 0.224, 0.225],
-            height: 560,
-            width: 560,
-            channels: 3,
-        }
-    }
-}
-
-
-impl Processor {
+impl PreProcessor {
     /// Create a new instance of the Processor struct
-    pub fn new(config: PreprocessConfig) -> Self {
+    pub fn new(config: Args) -> Self {
         Self {
             config,
         }
@@ -51,7 +30,7 @@ impl Processor {
         let ys_vec: Vec<(ndarray::Array<f32, ndarray::Dim<[usize; 3]>>, (u32, u32))> = xs.par_iter().enumerate().map(|(_, x)| {
             let t = std::time::Instant::now();
             let (orig_width, orig_height) = (x.width(), x.height());
-            let scale = (self.config.width as f32 / orig_width as f32).min(self.config.height as f32 / orig_height as f32);
+            let scale = (self.config.img_w as f32 / orig_width as f32).min(self.config.img_h as f32 / orig_height as f32);
             let new_width = (orig_width as f32 * scale) as u32;
             let new_height = (orig_height as f32 * scale) as u32;
             if deep_profile{
@@ -79,8 +58,8 @@ impl Processor {
             let mean_g = (self.config.mean[1] * 255.0) as u8;
             let mean_b = (self.config.mean[2] * 255.0) as u8;
             let mut padded = image::RgbImage::from_pixel(
-                self.config.width as u32,
-                self.config.height as u32,
+                self.config.img_w as u32,
+                self.config.img_h as u32,
                 image::Rgb([mean_r, mean_g, mean_b])
             );
             if deep_profile{
@@ -88,8 +67,8 @@ impl Processor {
             }
             let t = std::time::Instant::now();
             // Compute offsets to center the resized image in the padded image
-            let x_offset = (self.config.width as u32 - new_width) / 2;
-            let y_offset = (self.config.height as u32 - new_height) / 2;
+            let x_offset = (self.config.img_w as u32 - new_width) / 2;
+            let y_offset = (self.config.img_h as u32 - new_height) / 2;
             // Overlay the resized image onto the padded image at the calculated offsets
             image::imageops::overlay(&mut padded, &resized, x_offset as i64, y_offset as i64);
             if deep_profile{
@@ -99,15 +78,15 @@ impl Processor {
             let img = DynamicImage::ImageRgb8(padded).to_rgb8();
             let pixels = img.pixels();
 
-            let mut img_arr = ndarray::Array::from_elem((self.config.channels, self.config.height, self.config.width), 0 as f32); //144.0 / 255.0);
+            let mut img_arr = ndarray::Array::from_elem((self.config.ch as usize, self.config.img_h, self.config.img_w), 0 as f32); //144.0 / 255.0);
             if deep_profile {
                 println!("[preprocessing - 5]: {:?}", t.elapsed());
             }
             let t = std::time::Instant::now();
             // Populate the array with normalized pixel values
             for (i, rgb) in pixels.enumerate() {
-                let y = i / self.config.width as usize;
-                let x = i % self.config.width as usize;
+                let y = i / self.config.img_w as usize;
+                let x = i % self.config.img_w as usize;
                 img_arr[[0, y, x]] = (rgb[0] as f32 / 255.0 - self.config.mean[0]) / self.config.std[0];
                 img_arr[[1, y, x]] = (rgb[1] as f32 / 255.0 - self.config.mean[1]) / self.config.std[1];
                 img_arr[[2, y, x]] = (rgb[2] as f32 / 255.0 - self.config.mean[2]) / self.config.std[2];
