@@ -22,11 +22,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             postprocessor,
             args)
         );
+    println!("RF-DETR Object Detection server listening on {}", addr);
     Server::builder()
     .add_service(server)
     .serve(addr)
     .await?;
-    println!("RF-DETR Object Detection server listening on {}", addr);
 
     Ok(())
 }
