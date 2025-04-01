@@ -5,14 +5,15 @@ use tokio::sync::Mutex;
 use tonic::{Response, Status};
 use crate::cli::Args;
 use crate::grpc;
-use crate::preprocess::Processor;
-use crate::postprocess::{softmax_and_filter, non_maximum_suppression, denormalize};
+use crate::preprocess::PreProcessor;
+use crate::postprocess::PostProcessor;
 
 
 #[derive(Debug)]
 pub struct MyImageProcessor {
         model: Mutex<ort::session::Session>,
-        processor: Mutex<Processor>,
+        preprocessor: Mutex<PreProcessor>,
+        postprocessor: Mutex<PostProcessor>,
         args: Args,
 }
 
@@ -24,10 +25,11 @@ impl Default for MyImageProcessor {
 
 impl MyImageProcessor {
     /// Creates a new instance of MyImageProcessor with the provided model and processor.
-    pub fn new(model: ort::session::Session, processor: Processor, args: Args) -> Self {
+    pub fn new(model: ort::session::Session, preprocessor: PreProcessor, postprocessor: PostProcessor, args: Args) -> Self {
         Self {
             model: Mutex::new(model),
-            processor: Mutex::new(processor),
+            preprocessor: Mutex::new(preprocessor),
+            postprocessor: Mutex::new(postprocessor),
             args: args,
         }
     }
@@ -39,38 +41,55 @@ impl grpc::image_processor_server::ImageProcessor for MyImageProcessor {
         &self,
         request: tonic::Request<crate::grpc::ImageRequest>,
     ) -> Result<tonic::Response<crate::grpc::DetectionResponse>, tonic::Status> {
+        let t = std::time::Instant::now();
         // 1. Decode image bytes
         let image_data = &request.into_inner().image_data;
         let image = image::load_from_memory(image_data)
         .map_err(|e| Status::invalid_argument(format!("Invalid image: {}", e)))?;
         let (orig_w, orig_h) = image.dimensions();
+        if self.args.profile {
+            println!("[image loading]: {:?}", t.elapsed());
+        }
         
-
+        let t = std::time::Instant::now();
         // 2. Run your image processing logic (replace with your actual function)
-        let (xs, offset) = self.processor.lock().await.preprocess(&vec![image.clone()], self.args.deep_profile)
+        let (xs, offset) = self.preprocessor.lock().await.preprocess(&vec![image.clone()], self.args.deep_profile)
             .map_err(|e| Status::internal(format!("Preprocessing error: {}", e)))?;
+        if self.args.profile {
+            println!("[preprocessing]: {:?}", t.elapsed());
+        }
+        let t = std::time::Instant::now();
         let xs = CowArray::from(xs);
         let input_data = ort::inputs![xs.view()].map_err(|e| Status::internal(format!("ORT input error: {}", e)))?;
+        if self.args.profile {
+            println!("[input tensor preparation]: {:?}", t.elapsed());
+        }
+        let t = std::time::Instant::now();
         let session = self.model.lock().await;
         let ys = session.run(input_data)
             .map_err(|e| Status::internal(format!("Model run error: {}", e)))?;
-        let i = ys
+        if self.args.profile {
+            println!("[model run]: {:?}", t.elapsed());
+        }
+        let t = std::time::Instant::now();
+        let i: Vec<ArrayBase<OwnedRepr<f32>, ndarray::Dim<IxDynImpl>>> = ys
             .iter()
             .map(|(_k, v)| {
                 let v = v.try_extract_tensor::<f32>().unwrap().into_owned();
                 v
             })
             .collect::<Vec<Array<_, _>>>();
-        let boxes: &ArrayBase<OwnedRepr<f32>, ndarray::Dim<IxDynImpl>> = &i[0];
-        let classes: &ArrayBase<OwnedRepr<f32>, ndarray::Dim<IxDynImpl>> = &i[1];
+        if self.args.profile {
+            println!("[model output]: {:?}", t.elapsed());
+        }
+        let t = std::time::Instant::now();
 
-        let (filtered_classes, filtered_conf, filtered_boxes) = softmax_and_filter(classes, boxes, 0.5)
-            .map_err(|e| Status::internal(format!("Softmax and filter error: {}", e)))?;
-        let (filtered_conf, filtered_classes, filtered_boxes) = non_maximum_suppression(filtered_conf, filtered_classes, filtered_boxes, 0.25);
-        
-        let filtered_boxes = denormalize(
-            orig_w as f32, orig_h as f32, 560.0, 560.0,
-            offset[0].0, offset[0].1, filtered_boxes);
+        let (filtered_boxes, filtered_classes, filtered_conf ) = self.postprocessor.lock().await
+            .postprocess(i, orig_w as f32, orig_h as f32, offset)
+            .map_err(|e| Status::internal(format!("Postprocessing error: {}", e)))?;
+        if self.args.profile {
+            println!("[postprocessing]: {:?}", t.elapsed());
+        }
         // 3. Prepare response
         Ok(Response::new(crate::grpc::DetectionResponse {
             filtered_conf,
