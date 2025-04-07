@@ -57,23 +57,6 @@ impl<B: Backend> ConvBlock<B> {
 }
 
 
-// class DWConv(Conv):
-//     """Depth-wise convolution module."""
-
-//     def __init__(self, c1, c2, k=1, s=1, d=1, act=True):
-//         """
-//         Initialize depth-wise convolution with given parameters.
-
-//         Args:
-//             c1 (int): Number of input channels.
-//             c2 (int): Number of output channels.
-//             k (int): Kernel size.
-//             s (int): Stride.
-//             d (int): Dilation.
-//             act (bool | nn.Module): Activation function.
-//         """
-//         super().__init__(c1, c2, k, s, g=math.gcd(c1, c2), d=d, act=act)
-
 #[derive(Module, Debug)]
 pub struct DWConv<B: Backend> {
     conv: ConvBlock<B>,
@@ -82,7 +65,7 @@ pub struct DWConv<B: Backend> {
 impl <B: Backend> DWConv<B> {
     pub fn new(c1: usize, c2: usize, k: usize, s: usize, d: Option<usize>, device: &B::Device) -> Self {
         let g = c1.gcd(&(c2 as usize));
-        let conv = ConvBlock::new(c1, c2, k, s, Some(0), Some(g), d, device);
+        let conv = ConvBlock::new(c1, c2, k, s, None, Some(g), d, device);
         Self { conv }
     }
 
