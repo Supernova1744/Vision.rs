@@ -40,7 +40,7 @@ impl<B: Backend> ConvBlock<B> {
         Self {
             conv,
             norm,
-            activation: nn::SiLU::new(),
+            activation: <nn::SiLU as burn::module::Module<B>>::to_device(nn::SiLU::new(), device)
         }
     }
 
