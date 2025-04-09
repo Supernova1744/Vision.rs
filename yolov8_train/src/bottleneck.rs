@@ -76,7 +76,7 @@ impl <B: Backend> Bottleneck<B> {
         if self.add {
             let x = self.conv1.forward(input.clone());
             let x = self.conv2.forward(x);
-            x + input
+            x.add(input) //+ input
         } else {
             let x = self.conv1.forward(input);
             let x = self.conv2.forward(x);
