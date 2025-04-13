@@ -3,7 +3,7 @@ use crate::conv::ConvBlock;
 use crate::bottleneck::Bottleneck;
 
 
-#[derive(Module, Debug)]
+// #[derive(Module, Debug)]
 pub struct C2f<B: Backend> {
     conv1: ConvBlock<B>,
     conv2: ConvBlock<B>,

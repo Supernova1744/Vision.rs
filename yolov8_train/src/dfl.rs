@@ -4,7 +4,7 @@ use burn::{
     tensor::activation::softmax,
 };
 
-#[derive(Module, Debug)]
+// #[derive(Module, Debug)]
 pub struct DFL<B: Backend> {
     pub conv: nn::conv::Conv2d<B>,
     pub c1: usize,

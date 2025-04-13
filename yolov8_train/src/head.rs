@@ -7,7 +7,7 @@ use crate::dfl::DFL;
 
 
 
-#[derive(Module, Debug)]
+// #[derive(Module, Debug)]
 pub struct Detect<B: Backend> {
     cv2_seq1: Vec<ConvBlock<B>>,
     cv2_seq2: Vec<ConvBlock<B>>,

@@ -25,7 +25,7 @@ use crate::head::Detect;
 
 type MyBackend = Wgpu<f32, i32>;
 
-#[derive(Module, Debug)]
+// #[derive(Module, Debug)]
 pub struct Model<B: Backend = burn::backend::wgpu::Wgpu<f32, i32>> {
     // Backbone
     conv1: ConvBlock<B>, //1.  [-1, 1, Conv, [64, 3, 2]] # 0-P1/2
@@ -67,8 +67,6 @@ impl <B: Backend> Model<B> {
     ///
     pub fn new(device: &B::Device) -> Self {
         // Backbone
-        let wscale = 0.25; // 0.25 for YOLOv8n
-        let dscale = 0.33; // 0.33 for YOLOv8n
         let conv1 = ConvBlock::new(3, multw(64), 3, 2, None, None, None, device); // out: [Batch,8,26,26]
         let conv2 = ConvBlock::new(multw(64), multw(128), 3, 2, None, None, None, device); // out: [Batch,8,26,26]
         let c2f1 = C2f::new(multw(128), multw(128), Some(multd(3)), Some(true), None, None, device); // out: [Batch,8,26,26]

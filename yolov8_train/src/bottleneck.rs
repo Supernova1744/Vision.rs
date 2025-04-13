@@ -1,7 +1,7 @@
 use burn::prelude::*;
 use crate::conv::ConvBlock;
 
-#[derive(Module, Debug)]
+// #[derive(Module, Debug)]
 pub struct Bottleneck<B: Backend> {
     conv1: ConvBlock<B>,
     conv2: ConvBlock<B>,

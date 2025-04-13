@@ -16,7 +16,7 @@ fn autopad(k: usize, p: Option<usize>, d: usize) -> usize {
     p.unwrap()
 }
 
-#[derive(Module, Debug)]
+// #[derive(Module, Debug)]
 pub struct ConvBlock<B: Backend> {
     conv: nn::conv::Conv2d<B>,
     norm: BatchNorm<B, 2>,
@@ -57,7 +57,7 @@ impl<B: Backend> ConvBlock<B> {
 }
 
 
-#[derive(Module, Debug)]
+// #[derive(Module, Debug)]
 pub struct DWConv<B: Backend> {
     conv: ConvBlock<B>,
 }

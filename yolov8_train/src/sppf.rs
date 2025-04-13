@@ -5,7 +5,7 @@ use burn::{
 use crate::conv::ConvBlock;
 
 
-#[derive(Module, Debug)]
+// #[derive(Module, Debug)]
 pub struct SPPF<B: Backend> {
     conv1: ConvBlock<B>,
     conv2: ConvBlock<B>,
