@@ -165,6 +165,10 @@ impl <B: Backend> Detect<B> {
         }
     }
     
+    fn decode_bboxes(&self, bboxes: Tensor<B, 3>, anchors: Tensor<B, 3>, xywh: bool) -> Tensor<B, 3>{
+        self.dist2bbox(bboxes, anchors, xywh, 1)
+    }
+    
     
     
 }
