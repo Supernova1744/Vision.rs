@@ -168,6 +168,26 @@ impl <B: Backend> Detect<B> {
     fn decode_bboxes(&self, bboxes: Tensor<B, 3>, anchors: Tensor<B, 3>, xywh: bool) -> Tensor<B, 3>{
         self.dist2bbox(bboxes, anchors, xywh, 1)
     }
+
+    pub fn inference(&self, x: Vec<Tensor<B, 4>>) -> Tensor<B, 3>{
+        let shape = x[0].clone().dims();
+        let mut reshaped_x: Vec<Tensor<B, 3>> = vec![];
+        x.iter().for_each(|xi| {
+            let reshaped_xi = xi.clone().reshape(
+                [shape[0] as i32, self.no as i32, -1]
+            );
+            reshaped_x.push(reshaped_xi);
+        });
+        let x_cat = Tensor::cat(reshaped_x, 2);
+        let splits = x_cat.split_with_sizes([self.reg_max * 4, self.nc].to_vec(), 1);
+        let bbox = splits[0].clone();
+        let cls = splits[1].clone();
+        let dfl_box = self.dfl.forward(bbox);
+        let dbox = self.decode_bboxes(dfl_box, self.anchors.clone(), true).mul(self.strides.clone());
+        let output = Tensor::cat([dbox, nn::Sigmoid.forward(cls)].to_vec(), 1);
+        output
+        
+    }
     
     
     
