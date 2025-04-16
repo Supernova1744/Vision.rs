@@ -1,6 +1,6 @@
 use burn::{
-    nn::{conv::Conv2d, BatchNorm, PaddingConfig2d},
-    prelude::*, tensor
+    nn::conv::Conv2d,
+    prelude::*
 };
 use crate::conv::{DWConv, ConvBlock};
 use crate::dfl::DFL;
@@ -68,16 +68,16 @@ impl <B: Backend> Detect<B> {
             ConvBlock::<B>::new(ch[i], c3, 1, 1, None, None, None, device)
         ).collect::<Vec<ConvBlock<B>>>();
         
-        let cv3_seq2_b1 = (0..nl).map(|i|
+        let cv3_seq2_b1 = (0..nl).map(|_|
             // DWConv::<B>::new(c3, c3, 3, 1, None, device)
             ConvBlock::<B>::new(c3, c3, 3, 1, None, Some(c3.gcd(&(c3 as usize))), None, device)
         ).collect::<Vec<ConvBlock<B>>>();
 
-        let cv3_seq2_b2 = (0..nl).map(|i|
+        let cv3_seq2_b2 = (0..nl).map(|_|
             ConvBlock::<B>::new(c3, c3, 1, 1, None, None, None, device)
         ).collect::<Vec<ConvBlock<B>>>();
 
-        let cv3_seq3_b1: Vec<Conv2d<B>> = (0..nl).map(|i|
+        let cv3_seq3_b1: Vec<Conv2d<B>> = (0..nl).map(|_|
             nn::conv::Conv2dConfig::new([c3, nc], [1, 1]).with_bias(true).init(device)
         ).collect::<Vec<Conv2d<B>>>();
         
