@@ -16,7 +16,6 @@ fn autopad(k: usize, p: Option<usize>, d: usize) -> usize {
     p.unwrap()
 }
 
-// #[derive(Module, Debug)]
 pub struct ConvBlock<B: Backend> {
     conv: nn::conv::Conv2d<B>,
     norm: BatchNorm<B, 2>,
@@ -45,19 +44,20 @@ impl<B: Backend> ConvBlock<B> {
     }
 
     pub fn forward(&self, input: Tensor<B, 4>) -> Tensor<B, 4> {
-        let x = self.conv.forward(input);
-        let x = self.norm.forward(x);
-        self.activation.forward(x)
+        self.activation.forward(
+            self.norm.forward(
+                self.conv.forward(input)
+            )
+        )
     }
 
     pub fn forward_fuse(&self, input: Tensor<B, 4>) -> Tensor<B, 4> {
-        let x = self.conv.forward(input);
-        self.activation.forward(x)
+        self.activation.forward(
+            self.conv.forward(input)
+        )
     }
 }
 
-
-// #[derive(Module, Debug)]
 pub struct DWConv<B: Backend> {
     conv: ConvBlock<B>,
 }
