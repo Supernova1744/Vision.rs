@@ -1,0 +1,13 @@
+[package]
+name = "train_test"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# burn = { version = "0.15.0", features = ["vision"] }
+burn = { path = "burn/crates/burn", features = ["burn-train", "dataset", "metrics", "train", "vision", "wgpu", "ndarray"] }
+num-integer = "0.1.46"
+rayon = "1.10.0"
+# burn-cuda = "0.15.0"
+# wgpu-info = "24.0.0"
+# burn_cuda = { path = "burn/crates/burn-cuda", features = ["burn-train", "dataset", "metrics", "ndarray", "train", "vision", "wgpu"] }
