@@ -1,14 +1,12 @@
 use burn::{
-    nn::conv::Conv2d,
+    prelude::nn::conv::{Conv2d, Conv2dConfig},
     prelude::*
 };
-use crate::conv::{DWConv, ConvBlock};
+use crate::conv::ConvBlock;
 use crate::dfl::DFL;
 use num_integer::Integer;
 
 
-
-// #[derive(Module, Debug)]
 pub struct Detect<B: Backend> {
     cv2_seq1: Vec<ConvBlock<B>>,
     cv2_seq2: Vec<ConvBlock<B>>,
@@ -45,41 +43,30 @@ impl <B: Backend> Detect<B> {
         let anchors = Tensor::<B, 3>::empty([1,1,1], device);
         let strides = Tensor::<B, 3>::empty([1,1,1], device);
 
-        let cv2_seq1 = (0..nl).map(|i|
-        ConvBlock::<B>::new(ch[i], c2, 3, 1, None, None, None, device)
-        ).collect::<Vec<ConvBlock<B>>>();
 
-        let cv2_seq2 = (0..nl).map(|i|
-            ConvBlock::<B>::new(c2, c2, 3, 1, None, None, None, device)
-            ).collect::<Vec<ConvBlock<B>>>();
-
-        let cv2_seq3 = (0..nl).map(|i|
-            nn::conv::Conv2dConfig::new([c2, 4 * reg_max], [1, 1]).with_bias(true).init(device)
-        ).collect::<Vec<Conv2d<B>>>();
-
-
-        let cv3_seq1_b1 = (0..nl).map(|i|
-            // DWConv::<B>::new(ch[i], ch[i], 3, 1, None, device)
-            ConvBlock::<B>::new(ch[i], ch[i], 3, 1, None, Some(ch[i].gcd(&(ch[i] as usize))), None, device)
-            
-        ).collect::<Vec<ConvBlock<B>>>();
+        let mut cv2_seq1 = Vec::<ConvBlock<B>>::with_capacity(nl);
+        let mut cv2_seq2 = Vec::<ConvBlock<B>>::with_capacity(nl);
+        let mut cv2_seq3    = Vec::<Conv2d<B>>::with_capacity(nl);
         
-        let cv3_seq1_b2 = (0..nl).map(|i|
-            ConvBlock::<B>::new(ch[i], c3, 1, 1, None, None, None, device)
-        ).collect::<Vec<ConvBlock<B>>>();
-        
-        let cv3_seq2_b1 = (0..nl).map(|_|
-            // DWConv::<B>::new(c3, c3, 3, 1, None, device)
-            ConvBlock::<B>::new(c3, c3, 3, 1, None, Some(c3.gcd(&(c3 as usize))), None, device)
-        ).collect::<Vec<ConvBlock<B>>>();
+        let mut cv3_seq1_b1 = Vec::<ConvBlock<B>>::with_capacity(nl);
+        let mut cv3_seq1_b2 = Vec::<ConvBlock<B>>::with_capacity(nl);
+        let mut cv3_seq2_b1 = Vec::<ConvBlock<B>>::with_capacity(nl);
+        let mut cv3_seq2_b2 = Vec::<ConvBlock<B>>::with_capacity(nl);
+        let mut cv3_seq3_b1    = Vec::<Conv2d<B>>::with_capacity(nl);
 
-        let cv3_seq2_b2 = (0..nl).map(|_|
-            ConvBlock::<B>::new(c3, c3, 1, 1, None, None, None, device)
-        ).collect::<Vec<ConvBlock<B>>>();
+        for i in 0..nl{
+            cv2_seq1.push(ConvBlock::<B>::new(ch[i], c2, 3, 1, None, None, None, device));
+            cv2_seq2.push(ConvBlock::<B>::new(c2, c2, 3, 1, None, None, None, device));
+            cv2_seq3.push(Conv2dConfig::new([c2, 4 * reg_max], [1, 1]).with_bias(true).init(device));
 
-        let cv3_seq3_b1: Vec<Conv2d<B>> = (0..nl).map(|_|
-            nn::conv::Conv2dConfig::new([c3, nc], [1, 1]).with_bias(true).init(device)
-        ).collect::<Vec<Conv2d<B>>>();
+            cv3_seq1_b1.push(ConvBlock::<B>::new(ch[i], ch[i], 3, 1, None, Some(ch[i].gcd(&(ch[i] as usize))), None, device));
+            cv3_seq1_b2.push(ConvBlock::<B>::new(ch[i], c3, 1, 1, None, None, None, device));
+
+            cv3_seq2_b1.push(ConvBlock::<B>::new(c3, c3, 3, 1, None, Some(c3.gcd(&(c3 as usize))), None, device));
+            cv3_seq2_b2.push(ConvBlock::<B>::new(c3, c3, 1, 1, None, None, None, device));
+
+            cv3_seq3_b1.push(Conv2dConfig::new([c3, nc], [1, 1]).with_bias(true).init(device));
+        }
         
         let stride = Tensor::<B, 1>::zeros([nl], device);
 
@@ -115,21 +102,15 @@ impl <B: Backend> Detect<B> {
     
 
     pub fn forward(&self, x: Vec<Tensor<B, 4>>) -> Vec<Tensor<B, 4>> {
-        // make a mutable copy
-        // let x = x.clone();
         let mut out = Vec::with_capacity(self.nl);
-        // do each layer i in parallel
         x.iter()
          .enumerate()
          .for_each(|(i, xi)| {
-            // let t = std::time::Instant::now();
             let y1 = self.cv2_seq3[i].forward(
                 self.cv2_seq2[i].forward(
                     self.cv2_seq1[i].forward(xi.clone())
                 )
              );
-            // println!("[*] cv2: {:?}", t.elapsed());
-            // let t = std::time::Instant::now();
             let y2 = self.cv3_seq3_b1[i].forward(
                 self.cv3_seq2_b2[i].forward(
                     self.cv3_seq2_b1[i].forward(
@@ -139,17 +120,13 @@ impl <B: Backend> Detect<B> {
                     )
                 )
              );
-            //  println!("[*] cv3: {:?}", t.elapsed());
-    
-             // stitch them back together
              out.push(Tensor::<B, 4>::cat(vec![y1, y2], 1));
          });
     
         out
     }
 
-    fn dist2bbox(&self, distance: Tensor<B, 3>, anchor_points: Tensor<B, 3>, xywh: bool, dim: usize) -> Tensor<B, 3>
-    {   
+    fn dist2bbox(&self, distance: Tensor<B, 3>, anchor_points: Tensor<B, 3>, xywh: bool, dim: usize) -> Tensor<B, 3>{   
         let chunks = distance.chunk(2, dim);
         let lt = chunks[0].clone();
         let rb = chunks[1].clone();
